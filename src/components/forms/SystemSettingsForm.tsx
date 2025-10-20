@@ -60,7 +60,8 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
         body: JSON.stringify({
           systemSettings: formData.systemSettings,
           name: name || '',
-          context: context || ''
+          context: context || '',
+          prompt: formData.prompt
         }),
       });
 

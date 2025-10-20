@@ -108,8 +108,7 @@ export default function Home() {
     
     if (errors.length === 0) {
       updateFormData(data);
-      // Collapse the system form and show the next form
-      setFormCollapsedStates(prev => ({ ...prev, system: true }));
+      // Show the next form but don't collapse the system form
       setFormVisibilityStates(prev => ({ ...prev, mustHave: true }));
       goToNextStep();
     }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { systemSettings, name, context } = await request.json();
+    const { systemSettings, name, context, prompt } = await request.json();
 
     if (!systemSettings) {
       return NextResponse.json(
@@ -18,6 +18,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Use custom prompt if provided, otherwise use default
+    const defaultPrompt = 'pick 5 information of this, must include long and lat, write nature language, to let the model know this is the current information about the current user device\n\nuse nature language, this is a system prompt guide, no dash';
+    const customPrompt = prompt || defaultPrompt;
+
     // Build system prompt for device information generation
     const systemPrompt = `You are a device information generator. Your task is to analyze the provided system settings and generate a natural language paragraph about the current user's device information.
 
@@ -32,7 +36,9 @@ IMPORTANT REQUIREMENTS:
 - NEVER use the phrase "system prompt" in your responses
 
 User: ${name || 'the user'}
-Context: ${context || 'general use'}`;
+Context: ${context || 'general use'}
+
+Custom Instructions: ${customPrompt}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
