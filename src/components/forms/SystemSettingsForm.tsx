@@ -15,14 +15,18 @@ interface SystemSettingsFormProps {
   onNext?: () => void;
   isCollapsed?: boolean;
   onCollapseChange?: (collapsed: boolean) => void;
+  name?: string;
+  context?: string;
 }
 
-export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, isCollapsed, onCollapseChange }: SystemSettingsFormProps) {
+export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, isCollapsed, onCollapseChange, name, context }: SystemSettingsFormProps) {
   const { register, handleSubmit, watch, formState: { errors: formErrors } } = useForm({
     defaultValues: data
   });
   
   const [showSubmitButton, setShowSubmitButton] = useState(true); // Show by default for empty form
+  const [deviceInfo, setDeviceInfo] = useState<string>('');
+  const [isGeneratingDeviceInfo, setIsGeneratingDeviceInfo] = useState(false);
   const watchedValues = watch();
 
   // Show submit button when form is empty or has changes
@@ -36,6 +40,40 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
     onSubmit(formData);
     if (onNext) {
       onNext();
+    }
+  };
+
+  const generateDeviceInfo = async () => {
+    if (!watchedValues.systemSettings?.trim()) {
+      alert('Please enter system settings first');
+      return;
+    }
+
+    setIsGeneratingDeviceInfo(true);
+    try {
+      const response = await fetch('/api/generate-device-info', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          systemSettings: watchedValues.systemSettings,
+          name: name || '',
+          context: context || ''
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate device information');
+      }
+
+      const result = await response.json();
+      setDeviceInfo(result.deviceInfo);
+    } catch (error) {
+      console.error('Error generating device info:', error);
+      alert('Failed to generate device information');
+    } finally {
+      setIsGeneratingDeviceInfo(false);
     }
   };
 
@@ -61,6 +99,25 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
         )}
         
         <ErrorDisplay errors={errors} className="mt-3" />
+        
+        {/* Device Information Generation */}
+        <div className="mt-4 space-y-3">
+          <button
+            type="button"
+            onClick={generateDeviceInfo}
+            disabled={isGeneratingDeviceInfo || !watchedValues.systemSettings?.trim()}
+            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {isGeneratingDeviceInfo ? 'Generating...' : 'Generate Device Info'}
+          </button>
+          
+          {deviceInfo && (
+            <div className="mt-3 p-3 bg-gray-50 rounded-md border border-gray-200">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Generated Device Information:</h4>
+              <p className="text-sm text-gray-600">{deviceInfo}</p>
+            </div>
+          )}
+        </div>
         
         <SubmitButton 
           onSubmit={handleSubmit(handleFormSubmit)} 

@@ -27,7 +27,8 @@ IMPORTANT REQUIREMENTS:
 - Ensure the paraphrased content is appropriate and suitable for the given context
 - Make sure the content is tailored for the specific user (${name || 'the user'})
 - Maintain the original meaning and intent while improving clarity and flow
-- Format the output with each paragraph separated by "========\n[paraphrased content]\n========"`;
+- Format the output with each paragraph separated by "========\n[paraphrased content]\n========"
+- NEVER use the phrase "system prompt" in your responses`;
 
     // Always include context as it's essential for generating suitable content
     if (context) {

@@ -135,6 +135,8 @@ export default function Home() {
                 onNext={goToNextStep}
                 isCollapsed={formCollapsedStates.system}
                 onCollapseChange={handleCollapseChange('system')}
+                name={formData.name}
+                context={formData.context}
               />
             )}
 
