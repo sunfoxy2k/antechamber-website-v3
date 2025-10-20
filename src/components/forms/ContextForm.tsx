@@ -1,6 +1,7 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
 import { CollapsibleBox } from '@/components/CollapsibleBox';
 import { SubmitButton } from '@/components/SubmitButton';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
@@ -17,9 +18,19 @@ interface ContextFormProps {
 }
 
 export function ContextForm({ data, onSubmit, isFilled, errors, onNext, isCollapsed, onCollapseChange }: ContextFormProps) {
-  const { register, handleSubmit, formState: { errors: formErrors } } = useForm({
+  const { register, handleSubmit, watch, formState: { errors: formErrors } } = useForm({
     defaultValues: data
   });
+  
+  const [showSubmitButton, setShowSubmitButton] = useState(false);
+  const watchedValues = watch();
+
+  // Show submit button when form is empty or has changes
+  useEffect(() => {
+    const hasChanges = watchedValues.name !== data.name || watchedValues.context !== data.context;
+    const isEmpty = !watchedValues.name && !watchedValues.context;
+    setShowSubmitButton(hasChanges || isEmpty);
+  }, [watchedValues, data]);
 
   const handleFormSubmit = (formData: Pick<FormData, 'name' | 'context'>) => {
     onSubmit(formData);
@@ -69,7 +80,11 @@ export function ContextForm({ data, onSubmit, isFilled, errors, onNext, isCollap
         
         <ErrorDisplay errors={errors} />
         
-        <SubmitButton onSubmit={handleSubmit(handleFormSubmit)} variant="sm" className="w-full">
+        <SubmitButton 
+          onSubmit={handleSubmit(handleFormSubmit)} 
+          variant="subtle" 
+          show={showSubmitButton}
+        >
           Save Context
         </SubmitButton>
       </form>

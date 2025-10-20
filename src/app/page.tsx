@@ -26,7 +26,14 @@ export default function Home() {
     goToNextStep
   } = useParaphraseForm();
 
-  // State for managing form collapsed states
+  // State for managing form visibility and collapsed states
+  const [formVisibilityStates, setFormVisibilityStates] = useState({
+    context: false,
+    system: false,
+    mustHave: false,
+    content: false
+  });
+  
   const [formCollapsedStates, setFormCollapsedStates] = useState({
     context: false,
     system: false,
@@ -40,7 +47,8 @@ export default function Home() {
   const handleContextSubmit = (data: { name: string; context: string }) => {
     updateFormData(data);
     if (validateContext()) {
-      // Collapse the context form and move to next step
+      // Show and collapse the context form, then move to next step
+      setFormVisibilityStates(prev => ({ ...prev, context: true }));
       setFormCollapsedStates(prev => ({ ...prev, context: true }));
       goToNextStep();
     }
@@ -49,7 +57,8 @@ export default function Home() {
   const handleSystemSubmit = (data: { systemSettings: string }) => {
     updateFormData(data);
     if (validateSystem()) {
-      // Collapse the system form and move to next step
+      // Show and collapse the system form, then move to next step
+      setFormVisibilityStates(prev => ({ ...prev, system: true }));
       setFormCollapsedStates(prev => ({ ...prev, system: true }));
       goToNextStep();
     }
@@ -57,7 +66,8 @@ export default function Home() {
 
   const handleMustHaveSubmit = (data: { mustHaveContent: string }) => {
     updateFormData(data);
-    // Collapse the mustHave form and move to next step
+    // Show and collapse the mustHave form, then move to next step
+    setFormVisibilityStates(prev => ({ ...prev, mustHave: true }));
     setFormCollapsedStates(prev => ({ ...prev, mustHave: true }));
     goToNextStep();
   };
@@ -65,7 +75,8 @@ export default function Home() {
   const handleContentSubmit = (data: { content: string }) => {
     updateFormData(data);
     if (validateContent()) {
-      // Collapse the content form and move to next step
+      // Show and collapse the content form, then move to next step
+      setFormVisibilityStates(prev => ({ ...prev, content: true }));
       setFormCollapsedStates(prev => ({ ...prev, content: true }));
       goToNextStep();
     }
@@ -87,48 +98,56 @@ export default function Home() {
 
           {/* Main Content Area */}
           <div className="lg:col-span-3 space-y-6">
-            <ContextForm
-              data={{ name: formData.name, context: formData.context }}
-              onSubmit={handleContextSubmit}
-              isFilled={filledStatus.context}
-              errors={validationErrors.context}
-              onNext={goToNextStep}
-              isCollapsed={formCollapsedStates.context}
-              onCollapseChange={handleCollapseChange('context')}
-            />
+            {formVisibilityStates.context && (
+              <ContextForm
+                data={{ name: formData.name, context: formData.context }}
+                onSubmit={handleContextSubmit}
+                isFilled={filledStatus.context}
+                errors={validationErrors.context}
+                onNext={goToNextStep}
+                isCollapsed={formCollapsedStates.context}
+                onCollapseChange={handleCollapseChange('context')}
+              />
+            )}
 
-            <SystemSettingsForm
-              data={{ systemSettings: formData.systemSettings }}
-              onSubmit={handleSystemSubmit}
-              isFilled={filledStatus.system}
-              errors={validationErrors.system}
-              onNext={goToNextStep}
-              isCollapsed={formCollapsedStates.system}
-              onCollapseChange={handleCollapseChange('system')}
-            />
+            {formVisibilityStates.system && (
+              <SystemSettingsForm
+                data={{ systemSettings: formData.systemSettings }}
+                onSubmit={handleSystemSubmit}
+                isFilled={filledStatus.system}
+                errors={validationErrors.system}
+                onNext={goToNextStep}
+                isCollapsed={formCollapsedStates.system}
+                onCollapseChange={handleCollapseChange('system')}
+              />
+            )}
 
-            <MustHaveContentForm
-              data={{ mustHaveContent: formData.mustHaveContent }}
-              onSubmit={handleMustHaveSubmit}
-              isFilled={filledStatus.mustHave}
-              onNext={goToNextStep}
-              isCollapsed={formCollapsedStates.mustHave}
-              onCollapseChange={handleCollapseChange('mustHave')}
-            />
+            {formVisibilityStates.mustHave && (
+              <MustHaveContentForm
+                data={{ mustHaveContent: formData.mustHaveContent }}
+                onSubmit={handleMustHaveSubmit}
+                isFilled={filledStatus.mustHave}
+                onNext={goToNextStep}
+                isCollapsed={formCollapsedStates.mustHave}
+                onCollapseChange={handleCollapseChange('mustHave')}
+              />
+            )}
 
-            <ContentForm
-              data={{ content: formData.content, prompt: formData.prompt }}
-              onSubmit={handleContentSubmit}
-              onMainSubmit={handleMainSubmit}
-              isFilled={filledStatus.content}
-              errors={validationErrors.content}
-              isLoading={isLoading}
-              mainError={mainError || undefined}
-              originalParagraphs={originalParagraphs}
-              paraphrasedParagraphs={paraphrasedParagraphs}
-              isCollapsed={formCollapsedStates.content}
-              onCollapseChange={handleCollapseChange('content')}
-            />
+            {formVisibilityStates.content && (
+              <ContentForm
+                data={{ content: formData.content, prompt: formData.prompt }}
+                onSubmit={handleContentSubmit}
+                onMainSubmit={handleMainSubmit}
+                isFilled={filledStatus.content}
+                errors={validationErrors.content}
+                isLoading={isLoading}
+                mainError={mainError || undefined}
+                originalParagraphs={originalParagraphs}
+                paraphrasedParagraphs={paraphrasedParagraphs}
+                isCollapsed={formCollapsedStates.content}
+                onCollapseChange={handleCollapseChange('content')}
+              />
+            )}
           </div>
         </div>
       </div>

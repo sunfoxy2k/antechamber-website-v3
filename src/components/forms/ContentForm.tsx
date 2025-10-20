@@ -1,7 +1,7 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CollapsibleBox } from '@/components/CollapsibleBox';
 import { SubmitButton } from '@/components/SubmitButton';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
@@ -39,8 +39,17 @@ export function ContentForm({
     defaultValues: data
   });
   const [showPrompt, setShowPrompt] = useState(false);
+  const [showSubmitButton, setShowSubmitButton] = useState(false);
   
   const content = watch('content');
+  const watchedValues = watch();
+
+  // Show submit button when form is empty or has changes
+  useEffect(() => {
+    const hasChanges = watchedValues.content !== data.content;
+    const isEmpty = !watchedValues.content;
+    setShowSubmitButton(hasChanges || isEmpty);
+  }, [watchedValues, data]);
 
   const handleFormSubmit = (formData: Pick<FormData, 'content'>) => {
     onSubmit(formData);
@@ -77,6 +86,15 @@ export function ContentForm({
           </div>
           
           <ErrorDisplay errors={errors} />
+          
+          <SubmitButton 
+            onSubmit={handleSubmit(handleFormSubmit)} 
+            variant="subtle" 
+            show={showSubmitButton}
+            className="mt-4"
+          >
+            Save Content
+          </SubmitButton>
         </div>
         
         {/* Prompt Section */}

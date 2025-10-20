@@ -1,6 +1,7 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
 import { CollapsibleBox } from '@/components/CollapsibleBox';
 import { SubmitButton } from '@/components/SubmitButton';
 import { FormData } from '@/types/form';
@@ -15,9 +16,19 @@ interface MustHaveContentFormProps {
 }
 
 export function MustHaveContentForm({ data, onSubmit, isFilled, onNext, isCollapsed, onCollapseChange }: MustHaveContentFormProps) {
-  const { register, handleSubmit } = useForm({
+  const { register, handleSubmit, watch } = useForm({
     defaultValues: data
   });
+  
+  const [showSubmitButton, setShowSubmitButton] = useState(false);
+  const watchedValues = watch();
+
+  // Show submit button when form is empty or has changes
+  useEffect(() => {
+    const hasChanges = watchedValues.mustHaveContent !== data.mustHaveContent;
+    const isEmpty = !watchedValues.mustHaveContent;
+    setShowSubmitButton(hasChanges || isEmpty);
+  }, [watchedValues, data]);
 
   const handleFormSubmit = (formData: Pick<FormData, 'mustHaveContent'>) => {
     onSubmit(formData);
@@ -47,8 +58,9 @@ export function MustHaveContentForm({ data, onSubmit, isFilled, onNext, isCollap
           
           <SubmitButton 
             onSubmit={handleSubmit(handleFormSubmit)} 
-            variant="sm" 
-            className="w-full mt-4"
+            variant="subtle" 
+            show={showSubmitButton}
+            className="mt-4"
           >
             Save Must Have Content
           </SubmitButton>
