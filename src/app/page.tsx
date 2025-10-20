@@ -28,7 +28,7 @@ export default function Home() {
 
   // State for managing form visibility and collapsed states
   const [formVisibilityStates, setFormVisibilityStates] = useState({
-    context: false,
+    context: true, // Show context form by default
     system: false,
     mustHave: false,
     content: false
@@ -47,9 +47,9 @@ export default function Home() {
   const handleContextSubmit = (data: { name: string; context: string }) => {
     updateFormData(data);
     if (validateContext()) {
-      // Show and collapse the context form, then move to next step
-      setFormVisibilityStates(prev => ({ ...prev, context: true }));
+      // Collapse the context form and show the next form
       setFormCollapsedStates(prev => ({ ...prev, context: true }));
+      setFormVisibilityStates(prev => ({ ...prev, system: true }));
       goToNextStep();
     }
   };
@@ -57,26 +57,25 @@ export default function Home() {
   const handleSystemSubmit = (data: { systemSettings: string }) => {
     updateFormData(data);
     if (validateSystem()) {
-      // Show and collapse the system form, then move to next step
-      setFormVisibilityStates(prev => ({ ...prev, system: true }));
+      // Collapse the system form and show the next form
       setFormCollapsedStates(prev => ({ ...prev, system: true }));
+      setFormVisibilityStates(prev => ({ ...prev, mustHave: true }));
       goToNextStep();
     }
   };
 
   const handleMustHaveSubmit = (data: { mustHaveContent: string }) => {
     updateFormData(data);
-    // Show and collapse the mustHave form, then move to next step
-    setFormVisibilityStates(prev => ({ ...prev, mustHave: true }));
+    // Collapse the mustHave form and show the next form
     setFormCollapsedStates(prev => ({ ...prev, mustHave: true }));
+    setFormVisibilityStates(prev => ({ ...prev, content: true }));
     goToNextStep();
   };
 
   const handleContentSubmit = (data: { content: string }) => {
     updateFormData(data);
     if (validateContent()) {
-      // Show and collapse the content form, then move to next step
-      setFormVisibilityStates(prev => ({ ...prev, content: true }));
+      // Collapse the content form
       setFormCollapsedStates(prev => ({ ...prev, content: true }));
       goToNextStep();
     }
