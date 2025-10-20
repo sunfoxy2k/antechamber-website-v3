@@ -100,7 +100,7 @@ export default function Home() {
     }
   };
 
-  const handleSystemSubmit = (data: { systemSettings: string }) => {
+  const handleSystemSubmit = (data: { systemSettings: string; prompt: string }) => {
     // Validate the submitted data directly
     const errors: string[] = [];
     if (!data.systemSettings.trim()) errors.push('System settings are required');
@@ -167,7 +167,7 @@ export default function Home() {
 
             {formVisibilityStates.system && (
               <SystemSettingsForm
-                data={{ systemSettings: formData.systemSettings }}
+                data={{ systemSettings: formData.systemSettings, prompt: formData.prompt }}
                 onSubmit={handleSystemSubmit}
                 isFilled={filledStatus.system}
                 errors={validationErrors.system}

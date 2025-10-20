@@ -8,8 +8,8 @@ import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { FormData } from '@/types/form';
 
 interface SystemSettingsFormProps {
-  data: Pick<FormData, 'systemSettings'>;
-  onSubmit: (data: Pick<FormData, 'systemSettings'>) => void;
+  data: Pick<FormData, 'systemSettings' | 'prompt'>;
+  onSubmit: (data: Pick<FormData, 'systemSettings' | 'prompt'>) => void;
   isFilled: boolean;
   errors: string[];
   onNext?: () => void;
@@ -31,12 +31,12 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
 
   // Show submit button when form is empty or has changes
   useEffect(() => {
-    const hasChanges = watchedValues.systemSettings !== data.systemSettings;
+    const hasChanges = watchedValues.systemSettings !== data.systemSettings || watchedValues.prompt !== data.prompt;
     const isEmpty = !watchedValues.systemSettings?.trim();
     setShowSubmitButton(hasChanges || isEmpty);
   }, [watchedValues, data]);
 
-  const handleFormSubmit = async (formData: Pick<FormData, 'systemSettings'>) => {
+  const handleFormSubmit = async (formData: Pick<FormData, 'systemSettings' | 'prompt'>) => {
     // Generate device info after saving
     setIsGeneratingDeviceInfo(true);
     try {
@@ -88,6 +88,21 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
         {formErrors.systemSettings && (
           <p className="mt-1 text-sm text-red-600">{formErrors.systemSettings.message}</p>
         )}
+        
+        <div className="mt-4">
+          <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-2">
+            Custom Prompt
+          </label>
+          <textarea
+            {...register('prompt')}
+            id="prompt"
+            placeholder="Enter your custom prompt for paraphrasing..."
+            className="w-full h-24 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            This prompt will be used to guide the AI in paraphrasing your content.
+          </p>
+        </div>
         
         <ErrorDisplay errors={errors} className="mt-3" />
         
