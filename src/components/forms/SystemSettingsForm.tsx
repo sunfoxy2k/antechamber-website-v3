@@ -20,7 +20,7 @@ interface SystemSettingsFormProps {
 }
 
 export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, isCollapsed, onCollapseChange, name, context }: SystemSettingsFormProps) {
-  const defaultPrompt = 'pick 5 information of this, must include long and lat, write nature language, to let the model know this is the current information about the current user device. use nature language, this is a system prompt guide, no dash';
+  const defaultPrompt = 'pick 5 information of this, must include long and lat, write nature language, to let the model know this is the current information about the current user device\n\nuse nature language, this is a system prompt guide, no dash';
   
   const { register, handleSubmit, watch, formState: { errors: formErrors } } = useForm({
     defaultValues: {
