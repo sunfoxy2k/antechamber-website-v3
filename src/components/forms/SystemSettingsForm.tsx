@@ -8,7 +8,7 @@ import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { FormData } from '@/types/form';
 
 interface SystemSettingsFormProps {
-  data: Pick<FormData, 'systemSettings' | 'prompt'>;
+  data: Pick<FormData, 'systemSettings'>;
   onSubmit: (data: Pick<FormData, 'systemSettings' | 'prompt'>) => void;
   isFilled: boolean;
   errors: string[];
@@ -24,8 +24,8 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
   
   const { register, handleSubmit, watch, formState: { errors: formErrors } } = useForm({
     defaultValues: {
-      ...data,
-      prompt: data.prompt || defaultPrompt
+      systemSettings: data.systemSettings,
+      prompt: defaultPrompt
     }
   });
   
@@ -37,7 +37,7 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
   // Show submit button when form is empty or has changes
   useEffect(() => {
     const hasSystemChanges = watchedValues.systemSettings !== data.systemSettings;
-    const hasPromptChanges = watchedValues.prompt !== (data.prompt || defaultPrompt);
+    const hasPromptChanges = watchedValues.prompt !== defaultPrompt;
     const isEmpty = !watchedValues.systemSettings?.trim();
     setShowSubmitButton(hasSystemChanges || hasPromptChanges || isEmpty);
   }, [watchedValues, data, defaultPrompt]);

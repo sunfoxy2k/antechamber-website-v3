@@ -167,7 +167,7 @@ export default function Home() {
 
             {formVisibilityStates.system && (
               <SystemSettingsForm
-                data={{ systemSettings: formData.systemSettings, prompt: formData.prompt }}
+                data={{ systemSettings: formData.systemSettings }}
                 onSubmit={handleSystemSubmit}
                 isFilled={filledStatus.system}
                 errors={validationErrors.system}
