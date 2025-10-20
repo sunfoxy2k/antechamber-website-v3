@@ -36,19 +36,8 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
     setShowSubmitButton(hasChanges || isEmpty);
   }, [watchedValues, data]);
 
-  const handleFormSubmit = (formData: Pick<FormData, 'systemSettings'>) => {
-    onSubmit(formData);
-    if (onNext) {
-      onNext();
-    }
-  };
-
-  const generateDeviceInfo = async () => {
-    if (!watchedValues.systemSettings?.trim()) {
-      alert('Please enter system settings first');
-      return;
-    }
-
+  const handleFormSubmit = async (formData: Pick<FormData, 'systemSettings'>) => {
+    // Generate device info after saving
     setIsGeneratingDeviceInfo(true);
     try {
       const response = await fetch('/api/generate-device-info', {
@@ -57,23 +46,25 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          systemSettings: watchedValues.systemSettings,
+          systemSettings: formData.systemSettings,
           name: name || '',
           context: context || ''
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate device information');
+      if (response.ok) {
+        const result = await response.json();
+        setDeviceInfo(result.deviceInfo);
       }
-
-      const result = await response.json();
-      setDeviceInfo(result.deviceInfo);
     } catch (error) {
       console.error('Error generating device info:', error);
-      alert('Failed to generate device information');
     } finally {
       setIsGeneratingDeviceInfo(false);
+    }
+
+    onSubmit(formData);
+    if (onNext) {
+      onNext();
     }
   };
 
@@ -100,32 +91,22 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
         
         <ErrorDisplay errors={errors} className="mt-3" />
         
-        {/* Device Information Generation */}
-        <div className="mt-4 space-y-3">
-          <button
-            type="button"
-            onClick={generateDeviceInfo}
-            disabled={isGeneratingDeviceInfo || !watchedValues.systemSettings?.trim()}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {isGeneratingDeviceInfo ? 'Generating...' : 'Generate Device Info'}
-          </button>
-          
-          {deviceInfo && (
-            <div className="mt-3 p-3 bg-gray-50 rounded-md border border-gray-200">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Generated Device Information:</h4>
-              <p className="text-sm text-gray-600">{deviceInfo}</p>
-            </div>
-          )}
-        </div>
+        {/* Device Information Display */}
+        {deviceInfo && (
+          <div className="mt-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Generated Device Information:</h4>
+            <p className="text-sm text-gray-600">{deviceInfo}</p>
+          </div>
+        )}
         
         <SubmitButton 
           onSubmit={handleSubmit(handleFormSubmit)} 
           variant="subtle" 
           show={showSubmitButton}
           className="mt-4"
+          isLoading={isGeneratingDeviceInfo}
         >
-          Save System Settings
+          {isGeneratingDeviceInfo ? 'Saving & Generating Info...' : 'Save System Settings'}
         </SubmitButton>
       </form>
     </CollapsibleBox>
