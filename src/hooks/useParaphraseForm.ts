@@ -136,6 +136,7 @@ export function useParaphraseForm() {
   return {
     formData,
     validationErrors,
+    setValidationErrors,
     originalParagraphs,
     paraphrasedParagraphs,
     isLoading,

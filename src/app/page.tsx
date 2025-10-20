@@ -12,6 +12,7 @@ export default function Home() {
   const {
     formData,
     validationErrors,
+    setValidationErrors,
     originalParagraphs,
     paraphrasedParagraphs,
     isLoading,
@@ -45,8 +46,14 @@ export default function Home() {
 
   // Form submit handlers
   const handleContextSubmit = (data: { name: string; context: string }) => {
-    updateFormData(data);
-    if (validateContext()) {
+    // Validate the submitted data directly
+    const errors: string[] = [];
+    if (!data.name.trim()) errors.push('Name is required');
+    if (!data.context.trim()) errors.push('Context is required');
+    setValidationErrors(prev => ({ ...prev, context: errors }));
+    
+    if (errors.length === 0) {
+      updateFormData(data);
       // Collapse the context form and show the next form
       setFormCollapsedStates(prev => ({ ...prev, context: true }));
       setFormVisibilityStates(prev => ({ ...prev, system: true }));
@@ -55,8 +62,13 @@ export default function Home() {
   };
 
   const handleSystemSubmit = (data: { systemSettings: string }) => {
-    updateFormData(data);
-    if (validateSystem()) {
+    // Validate the submitted data directly
+    const errors: string[] = [];
+    if (!data.systemSettings.trim()) errors.push('System settings are required');
+    setValidationErrors(prev => ({ ...prev, system: errors }));
+    
+    if (errors.length === 0) {
+      updateFormData(data);
       // Collapse the system form and show the next form
       setFormCollapsedStates(prev => ({ ...prev, system: true }));
       setFormVisibilityStates(prev => ({ ...prev, mustHave: true }));
@@ -73,8 +85,13 @@ export default function Home() {
   };
 
   const handleContentSubmit = (data: { content: string }) => {
-    updateFormData(data);
-    if (validateContent()) {
+    // Validate the submitted data directly
+    const errors: string[] = [];
+    if (!data.content.trim()) errors.push('Content to paraphrase is required');
+    setValidationErrors(prev => ({ ...prev, content: errors }));
+    
+    if (errors.length === 0) {
+      updateFormData(data);
       // Collapse the content form
       setFormCollapsedStates(prev => ({ ...prev, content: true }));
       goToNextStep();
