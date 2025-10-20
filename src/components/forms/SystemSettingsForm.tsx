@@ -32,6 +32,7 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
   const [showSubmitButton, setShowSubmitButton] = useState(true); // Show by default for empty form
   const [deviceInfo, setDeviceInfo] = useState<string>('');
   const [isGeneratingDeviceInfo, setIsGeneratingDeviceInfo] = useState(false);
+  const [apiCallDetails, setApiCallDetails] = useState<any>(null);
   const watchedValues = watch();
 
   // Show submit button when form is empty or has changes
@@ -52,25 +53,56 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
     // Generate device info after saving
     setIsGeneratingDeviceInfo(true);
     try {
+      const requestBody = {
+        systemSettings: formData.systemSettings,
+        name: name || '',
+        context: context || '',
+        prompt: formData.prompt
+      };
+
+      // Store API call details for display
+      setApiCallDetails({
+        url: '/api/generate-device-info',
+        method: 'POST',
+        model: 'gpt-4',
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+        requestBody: requestBody
+      });
+
       const response = await fetch('/api/generate-device-info', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          systemSettings: formData.systemSettings,
-          name: name || '',
-          context: context || '',
-          prompt: formData.prompt
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.ok) {
         const result = await response.json();
         setDeviceInfo(result.deviceInfo);
+        
+        // Update API call details with response
+        setApiCallDetails(prev => ({
+          ...prev,
+          response: result,
+          status: 'success',
+          responseTime: Date.now() - new Date(prev.timestamp).getTime()
+        }));
+      } else {
+        setApiCallDetails(prev => ({
+          ...prev,
+          status: 'error',
+          error: 'Failed to generate device information'
+        }));
       }
     } catch (error) {
       console.error('Error generating device info:', error);
+      setApiCallDetails(prev => ({
+        ...prev,
+        status: 'error',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }));
     } finally {
       setIsGeneratingDeviceInfo(false);
     }
@@ -119,6 +151,58 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
         
         <ErrorDisplay errors={errors} className="mt-3" />
         
+        {/* API Call Details Display */}
+        {apiCallDetails && (
+          <div className="mt-4 p-4 bg-blue-50 rounded-md border border-blue-200">
+            <h4 className="text-sm font-medium text-blue-700 mb-3">API Call Details:</h4>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">URL:</span>
+                <span className="text-gray-800 font-mono">{apiCallDetails.url}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">Method:</span>
+                <span className="text-gray-800 font-mono">{apiCallDetails.method}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">Model:</span>
+                <span className="text-gray-800 font-mono">{apiCallDetails.model}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">Version:</span>
+                <span className="text-gray-800 font-mono">{apiCallDetails.version}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">Status:</span>
+                <span className={`font-mono ${
+                  apiCallDetails.status === 'success' ? 'text-green-600' : 
+                  apiCallDetails.status === 'error' ? 'text-red-600' : 'text-yellow-600'
+                }`}>
+                  {apiCallDetails.status || 'pending'}
+                </span>
+              </div>
+              {apiCallDetails.responseTime && (
+                <div className="flex justify-between">
+                  <span className="font-medium text-gray-600">Response Time:</span>
+                  <span className="text-gray-800 font-mono">{apiCallDetails.responseTime}ms</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">Timestamp:</span>
+                <span className="text-gray-800 font-mono text-xs">
+                  {new Date(apiCallDetails.timestamp).toLocaleString()}
+                </span>
+              </div>
+              {apiCallDetails.error && (
+                <div className="mt-2 p-2 bg-red-100 rounded border border-red-200">
+                  <span className="font-medium text-red-700">Error:</span>
+                  <span className="text-red-600 ml-2">{apiCallDetails.error}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Device Information Display */}
         {deviceInfo && (
           <div className="mt-4 p-3 bg-gray-50 rounded-md border border-gray-200">
