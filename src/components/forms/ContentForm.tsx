@@ -39,7 +39,7 @@ export function ContentForm({
     defaultValues: data
   });
   const [showPrompt, setShowPrompt] = useState(false);
-  const [showSubmitButton, setShowSubmitButton] = useState(false);
+  const [showSubmitButton, setShowSubmitButton] = useState(true); // Show by default for empty form
   
   const content = watch('content');
   const watchedValues = watch();
@@ -47,7 +47,7 @@ export function ContentForm({
   // Show submit button when form is empty or has changes
   useEffect(() => {
     const hasChanges = watchedValues.content !== data.content;
-    const isEmpty = !watchedValues.content;
+    const isEmpty = !watchedValues.content?.trim();
     setShowSubmitButton(hasChanges || isEmpty);
   }, [watchedValues, data]);
 

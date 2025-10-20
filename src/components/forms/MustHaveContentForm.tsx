@@ -20,13 +20,13 @@ export function MustHaveContentForm({ data, onSubmit, isFilled, onNext, isCollap
     defaultValues: data
   });
   
-  const [showSubmitButton, setShowSubmitButton] = useState(false);
+  const [showSubmitButton, setShowSubmitButton] = useState(true); // Show by default for empty form
   const watchedValues = watch();
 
   // Show submit button when form is empty or has changes
   useEffect(() => {
     const hasChanges = watchedValues.mustHaveContent !== data.mustHaveContent;
-    const isEmpty = !watchedValues.mustHaveContent;
+    const isEmpty = !watchedValues.mustHaveContent?.trim();
     setShowSubmitButton(hasChanges || isEmpty);
   }, [watchedValues, data]);
 

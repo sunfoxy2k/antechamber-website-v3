@@ -22,13 +22,13 @@ export function ContextForm({ data, onSubmit, isFilled, errors, onNext, isCollap
     defaultValues: data
   });
   
-  const [showSubmitButton, setShowSubmitButton] = useState(false);
+  const [showSubmitButton, setShowSubmitButton] = useState(true); // Show by default for empty form
   const watchedValues = watch();
 
   // Show submit button when form is empty or has changes
   useEffect(() => {
     const hasChanges = watchedValues.name !== data.name || watchedValues.context !== data.context;
-    const isEmpty = !watchedValues.name && !watchedValues.context;
+    const isEmpty = !watchedValues.name?.trim() && !watchedValues.context?.trim();
     setShowSubmitButton(hasChanges || isEmpty);
   }, [watchedValues, data]);
 

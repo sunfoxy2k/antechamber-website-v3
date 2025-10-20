@@ -22,13 +22,13 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
     defaultValues: data
   });
   
-  const [showSubmitButton, setShowSubmitButton] = useState(false);
+  const [showSubmitButton, setShowSubmitButton] = useState(true); // Show by default for empty form
   const watchedValues = watch();
 
   // Show submit button when form is empty or has changes
   useEffect(() => {
     const hasChanges = watchedValues.systemSettings !== data.systemSettings;
-    const isEmpty = !watchedValues.systemSettings;
+    const isEmpty = !watchedValues.systemSettings?.trim();
     setShowSubmitButton(hasChanges || isEmpty);
   }, [watchedValues, data]);
 
