@@ -1,100 +1,137 @@
-import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle, Star } from 'lucide-react';
+'use client';
+
+import { useState } from 'react';
+import { ProgressMap } from '@/components/ProgressMap';
+import { ContextForm } from '@/components/forms/ContextForm';
+import { SystemSettingsForm } from '@/components/forms/SystemSettingsForm';
+import { MustHaveContentForm } from '@/components/forms/MustHaveContentForm';
+import { ContentForm } from '@/components/forms/ContentForm';
+import { useParaphraseForm } from '@/hooks/useParaphraseForm';
 
 export default function Home() {
+  const {
+    formData,
+    validationErrors,
+    originalParagraphs,
+    paraphrasedParagraphs,
+    isLoading,
+    mainError,
+    currentStep,
+    updateFormData,
+    getFilledStatus,
+    handleMainSubmit,
+    validateContext,
+    validateSystem,
+    validateContent,
+    goToNextStep
+  } = useParaphraseForm();
+
+  // State for managing form collapsed states
+  const [formCollapsedStates, setFormCollapsedStates] = useState({
+    context: false,
+    system: false,
+    mustHave: false,
+    content: false
+  });
+
+  const filledStatus = getFilledStatus();
+
+  // Form submit handlers
+  const handleContextSubmit = (data: { name: string; context: string }) => {
+    updateFormData(data);
+    if (validateContext()) {
+      // Collapse the context form and move to next step
+      setFormCollapsedStates(prev => ({ ...prev, context: true }));
+      goToNextStep();
+    }
+  };
+
+  const handleSystemSubmit = (data: { systemSettings: string }) => {
+    updateFormData(data);
+    if (validateSystem()) {
+      // Collapse the system form and move to next step
+      setFormCollapsedStates(prev => ({ ...prev, system: true }));
+      goToNextStep();
+    }
+  };
+
+  const handleMustHaveSubmit = (data: { mustHaveContent: string }) => {
+    updateFormData(data);
+    // Collapse the mustHave form and move to next step
+    setFormCollapsedStates(prev => ({ ...prev, mustHave: true }));
+    goToNextStep();
+  };
+
+  const handleContentSubmit = (data: { content: string }) => {
+    updateFormData(data);
+    if (validateContent()) {
+      // Collapse the content form and move to next step
+      setFormCollapsedStates(prev => ({ ...prev, content: true }));
+      goToNextStep();
+    }
+  };
+
+  // Handler for form collapse state changes
+  const handleCollapseChange = (formName: keyof typeof formCollapsedStates) => (collapsed: boolean) => {
+    setFormCollapsedStates(prev => ({ ...prev, [formName]: collapsed }));
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Hero Section */}
-      <section className="px-4 py-20 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-            Welcome to{' '}
-            <span className="text-indigo-600">Antechamber</span>
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
-            A modern, beautiful website built with Next.js and Tailwind CSS.
-            Experience the power of modern web development.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button size="lg" className="text-base">
-              Get Started
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="lg" className="text-base">
-              Learn More
-            </Button>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Sidebar Map */}
+          <div className="lg:col-span-1">
+            <ProgressMap filledStatus={filledStatus} />
           </div>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Why Choose Antechamber?
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
-              Built with modern technologies and best practices
-            </p>
-          </div>
-          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                title: 'Modern Design',
-                description: 'Clean, responsive design that works on all devices',
-                icon: Star,
-              },
-              {
-                title: 'Fast Performance',
-                description: 'Optimized for speed with Next.js and modern tooling',
-                icon: CheckCircle,
-              },
-              {
-                title: 'Developer Friendly',
-                description: 'Built with TypeScript, Tailwind CSS, and best practices',
-                icon: ArrowRight,
-              },
-            ].map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div
-                  key={index}
-                  className="rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-indigo-100 mb-4">
-                    <Icon className="h-6 w-6 text-indigo-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600">{feature.description}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+          {/* Main Content Area */}
+          <div className="lg:col-span-3 space-y-6">
+            <ContextForm
+              data={{ name: formData.name, context: formData.context }}
+              onSubmit={handleContextSubmit}
+              isFilled={filledStatus.context}
+              errors={validationErrors.context}
+              onNext={goToNextStep}
+              isCollapsed={formCollapsedStates.context}
+              onCollapseChange={handleCollapseChange('context')}
+            />
 
-      {/* CTA Section */}
-      <section className="py-20 bg-indigo-600">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Ready to get started?
-            </h2>
-            <p className="mt-4 text-lg text-indigo-200">
-              Join thousands of developers who trust Antechamber
-            </p>
-            <div className="mt-8">
-              <Button size="lg" variant="secondary" className="text-base">
-                Start Your Journey
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
+            <SystemSettingsForm
+              data={{ systemSettings: formData.systemSettings }}
+              onSubmit={handleSystemSubmit}
+              isFilled={filledStatus.system}
+              errors={validationErrors.system}
+              onNext={goToNextStep}
+              isCollapsed={formCollapsedStates.system}
+              onCollapseChange={handleCollapseChange('system')}
+            />
+
+            <MustHaveContentForm
+              data={{ mustHaveContent: formData.mustHaveContent }}
+              onSubmit={handleMustHaveSubmit}
+              isFilled={filledStatus.mustHave}
+              onNext={goToNextStep}
+              isCollapsed={formCollapsedStates.mustHave}
+              onCollapseChange={handleCollapseChange('mustHave')}
+            />
+
+            <ContentForm
+              data={{ content: formData.content, prompt: formData.prompt }}
+              onSubmit={handleContentSubmit}
+              onMainSubmit={handleMainSubmit}
+              isFilled={filledStatus.content}
+              errors={validationErrors.content}
+              isLoading={isLoading}
+              mainError={mainError || undefined}
+              originalParagraphs={originalParagraphs}
+              paraphrasedParagraphs={paraphrasedParagraphs}
+              isCollapsed={formCollapsedStates.content}
+              onCollapseChange={handleCollapseChange('content')}
+            />
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 }
