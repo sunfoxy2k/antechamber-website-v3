@@ -20,18 +20,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Build enhanced system prompt
-    let systemPrompt = prompt || 'Please paraphrase the following content by rewording and changing word order, but keep all existing nouns and entities exactly the same. Format the output with each paragraph separated by "========\n[paraphrased content]\n========"';
-    
+    let systemPrompt = `You are a professional content paraphrasing assistant. Your task is to paraphrase the provided content while ensuring it is suitable for the specific context and user. 
+
+IMPORTANT REQUIREMENTS:
+- Reword and change word order while keeping all existing nouns and entities exactly the same
+- Ensure the paraphrased content is appropriate and suitable for the given context
+- Make sure the content is tailored for the specific user (${name || 'the user'})
+- Maintain the original meaning and intent while improving clarity and flow
+- Format the output with each paragraph separated by "========\n[paraphrased content]\n========"`;
+
+    // Always include context as it's essential for generating suitable content
     if (context) {
-      systemPrompt += `\n\nContext: ${context}`;
+      systemPrompt += `\n\nCONTEXT (CRITICAL): ${context}\nThe generated content must be appropriate and suitable for this specific context.`;
     }
     
     if (systemSettings) {
-      systemPrompt += `\n\nSystem Settings: ${systemSettings}`;
+      systemPrompt += `\n\nADDITIONAL SYSTEM REQUIREMENTS: ${systemSettings}`;
     }
     
     if (mustHaveContent) {
-      systemPrompt += `\n\nMust include this content: ${mustHaveContent}`;
+      systemPrompt += `\n\nCONTENT THAT MUST BE INCLUDED: ${mustHaveContent}`;
+    }
+
+    // Add custom prompt if provided
+    if (prompt && prompt !== 'Please paraphrase the following content by rewording and changing word order, but keep all existing nouns and entities exactly the same. Format the output with each paragraph separated by "========\n[paraphrased content]\n========"') {
+      systemPrompt += `\n\nCUSTOM INSTRUCTIONS: ${prompt}`;
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

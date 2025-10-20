@@ -10,7 +10,7 @@ export function useParaphraseForm() {
     systemSettings: '',
     mustHaveContent: '',
     content: '',
-    prompt: 'Please paraphrase the following content by rewording and changing word order, but keep all existing nouns and entities exactly the same. Format the output with each paragraph separated by "========\n[paraphrased content]\n========"'
+    prompt: 'Please paraphrase the following content by rewording and changing word order, but keep all existing nouns and entities exactly the same. Ensure the paraphrased content is suitable for the given context and user. Format the output with each paragraph separated by "========\n[paraphrased content]\n========"'
   });
 
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
