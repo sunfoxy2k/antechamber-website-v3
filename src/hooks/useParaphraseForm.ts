@@ -1,16 +1,29 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { FormData, ValidationErrors, FilledStatus } from '@/types/form';
 
 export function useParaphraseForm() {
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    context: '',
-    systemSettings: '',
-    mustHaveContent: '',
-    content: '',
-    prompt: 'Please paraphrase the following content by rewording and changing word order, but keep all existing nouns and entities exactly the same. Ensure the paraphrased content is suitable for the given context and user. Format the output with each paragraph separated by "========\n[paraphrased content]\n========"'
+  // Initialize form data from localStorage or defaults
+  const [formData, setFormData] = useState<FormData>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('paraphrase-form-data');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (error) {
+          console.error('Error parsing saved form data:', error);
+        }
+      }
+    }
+    return {
+      name: '',
+      context: '',
+      systemSettings: '',
+      mustHaveContent: '',
+      content: '',
+      prompt: 'Please paraphrase the following content by rewording and changing word order, but keep all existing nouns and entities exactly the same. Ensure the paraphrased content is suitable for the given context and user. Format the output with each paragraph separated by "========\n[paraphrased content]\n========"'
+    };
   });
 
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
@@ -24,6 +37,13 @@ export function useParaphraseForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [mainError, setMainError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<'context' | 'system' | 'mustHave' | 'content'>('context');
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('paraphrase-form-data', JSON.stringify(formData));
+    }
+  }, [formData]);
 
   // Validation functions
   const validateContext = useCallback(() => {
@@ -51,6 +71,33 @@ export function useParaphraseForm() {
   // Update form data
   const updateFormData = useCallback((updates: Partial<FormData>) => {
     setFormData(prev => ({ ...prev, ...updates }));
+  }, []);
+
+  // Clear all saved form data
+  const clearFormData = useCallback(() => {
+    setFormData({
+      name: '',
+      context: '',
+      systemSettings: '',
+      mustHaveContent: '',
+      content: '',
+      prompt: 'Please paraphrase the following content by rewording and changing word order, but keep all existing nouns and entities exactly the same. Ensure the paraphrased content is suitable for the given context and user. Format the output with each paragraph separated by "========\n[paraphrased content]\n========"'
+    });
+    setValidationErrors({
+      context: [],
+      system: [],
+      content: []
+    });
+    setOriginalParagraphs([]);
+    setParaphrasedParagraphs([]);
+    setMainError(null);
+    setCurrentStep('context');
+    
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('paraphrase-form-data');
+      localStorage.removeItem('paraphrase-form-visibility');
+      localStorage.removeItem('paraphrase-form-collapsed');
+    }
   }, []);
 
   // Step progression functions
@@ -143,6 +190,7 @@ export function useParaphraseForm() {
     mainError,
     currentStep,
     updateFormData,
+    clearFormData,
     getFilledStatus,
     handleMainSubmit,
     validateContext,

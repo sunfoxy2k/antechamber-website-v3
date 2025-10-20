@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ProgressMap } from '@/components/ProgressMap';
 import { ContextForm } from '@/components/forms/ContextForm';
 import { SystemSettingsForm } from '@/components/forms/SystemSettingsForm';
@@ -19,6 +19,7 @@ export default function Home() {
     mainError,
     currentStep,
     updateFormData,
+    clearFormData,
     getFilledStatus,
     handleMainSubmit,
     validateContext,
@@ -28,21 +29,59 @@ export default function Home() {
   } = useParaphraseForm();
 
   // State for managing form visibility and collapsed states
-  const [formVisibilityStates, setFormVisibilityStates] = useState({
-    context: true, // Show context form by default
-    system: false,
-    mustHave: false,
-    content: false
+  const [formVisibilityStates, setFormVisibilityStates] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('paraphrase-form-visibility');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (error) {
+          console.error('Error parsing saved visibility state:', error);
+        }
+      }
+    }
+    return {
+      context: true, // Show context form by default
+      system: false,
+      mustHave: false,
+      content: false
+    };
   });
   
-  const [formCollapsedStates, setFormCollapsedStates] = useState({
-    context: false,
-    system: false,
-    mustHave: false,
-    content: false
+  const [formCollapsedStates, setFormCollapsedStates] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('paraphrase-form-collapsed');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (error) {
+          console.error('Error parsing saved collapsed state:', error);
+        }
+      }
+    }
+    return {
+      context: false,
+      system: false,
+      mustHave: false,
+      content: false
+    };
   });
 
   const filledStatus = getFilledStatus();
+
+  // Save form visibility states to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('paraphrase-form-visibility', JSON.stringify(formVisibilityStates));
+    }
+  }, [formVisibilityStates]);
+
+  // Save form collapsed states to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('paraphrase-form-collapsed', JSON.stringify(formCollapsedStates));
+    }
+  }, [formCollapsedStates]);
 
   // Form submit handlers
   const handleContextSubmit = (data: { name: string; context: string }) => {
