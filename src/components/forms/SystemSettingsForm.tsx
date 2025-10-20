@@ -20,7 +20,7 @@ interface SystemSettingsFormProps {
 }
 
 export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, isCollapsed, onCollapseChange, name, context }: SystemSettingsFormProps) {
-  const defaultPrompt = 'Please paraphrase the following content by rewording and changing word order, but keep all existing nouns and entities exactly the same. Ensure the paraphrased content is suitable for the given context and user. Format the output with each paragraph separated by "========\n[paraphrased content]\n========"';
+  const defaultPrompt = 'pick 5 information of this, must include long and lat, write nature language, to let the model know this is the current information about the current user device. use nature language, this is a system prompt guide, no dash';
   
   const { register, handleSubmit, watch, formState: { errors: formErrors } } = useForm({
     defaultValues: {
@@ -43,7 +43,7 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
   }, [watchedValues, data, defaultPrompt]);
 
   const handleFormSubmit = async (formData: Pick<FormData, 'systemSettings' | 'prompt'>) => {
-    // Use default prompt if custom prompt is empty
+    // Use default device info prompt if custom prompt is empty
     const dataToSubmit = {
       ...formData,
       prompt: formData.prompt?.trim() || defaultPrompt
@@ -103,16 +103,16 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
         
         <div className="mt-4">
           <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-2">
-            Custom Prompt
+            Device Information Prompt
           </label>
           <textarea
             {...register('prompt')}
             id="prompt"
-            placeholder="Enter your custom prompt for paraphrasing..."
+            placeholder="Enter your custom prompt for device information generation..."
             className="w-full h-24 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
           />
           <p className="mt-1 text-xs text-gray-500">
-            This prompt will be used to guide the AI in paraphrasing your content. If left empty, the default prompt will be used.
+            This prompt will be used to generate device information from system settings. If left empty, the default prompt will be used.
           </p>
         </div>
         
