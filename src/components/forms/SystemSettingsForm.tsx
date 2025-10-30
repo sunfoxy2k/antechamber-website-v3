@@ -26,95 +26,86 @@ export function SystemSettingsForm() {
   const name = formData.name;
   const context = formData.context;
 
-  const defaultPrompt = 'pick 5 information of this, must include long and lat, write nature language, to let the model know this is the current information about the current user device\n\nuse nature language, this is a system prompt guide, no dash';
+  const sampleDeviceData = `[
+  {
+    "cellular": true,
+    "device_id": "fe3419b7-2321-485d-859c-3d86d0fae14e",
+    "formatted_address": "400 W Broad St, Texarkana, TX 75501, USA",
+    "latitude": 33.4201672,
+    "locale": "en_US",
+    "location_service": true,
+    "longitude": -94.0466084,
+    "low_battery_mode": false,
+    "place_id": "ChIJ6ym3ql9qNIYRkyDuaECRgV0",
+    "utc_offset_seconds": -18000,
+    "wifi": true
+  }
+]`;
   
-  const { register, handleSubmit, watch, formState: { errors: formErrors } } = useForm({
+  const { register, handleSubmit, watch, setValue, formState: { errors: formErrors } } = useForm({
     defaultValues: {
-      systemSettings: data.systemSettings,
-      prompt: defaultPrompt
+      systemSettings: data.systemSettings
     }
   });
   
-  const [showSubmitButton, setShowSubmitButton] = useState(true); // Show by default for empty form
+  const [showSubmitButton, setShowSubmitButton] = useState(true);
   const [deviceInfo, setDeviceInfo] = useState<string>('');
   const [isGeneratingDeviceInfo, setIsGeneratingDeviceInfo] = useState(false);
-  const [apiCallDetails, setApiCallDetails] = useState<any>(null);
+  const [showSample, setShowSample] = useState(false);
   const watchedValues = watch();
 
   // Show submit button when form is empty or has changes
   useEffect(() => {
     const hasSystemChanges = watchedValues.systemSettings !== data.systemSettings;
-    const hasPromptChanges = watchedValues.prompt !== defaultPrompt;
     const isEmpty = !watchedValues.systemSettings?.trim();
-    setShowSubmitButton(hasSystemChanges || hasPromptChanges || isEmpty);
-  }, [watchedValues, data, defaultPrompt]);
+    setShowSubmitButton(hasSystemChanges || isEmpty);
+  }, [watchedValues, data]);
 
-  const handleFormSubmit = async (formData: Pick<FormData, 'systemSettings' | 'prompt'>) => {
-    // Use default device info prompt if custom prompt is empty
-    const dataToSubmit = {
-      ...formData,
-      prompt: formData.prompt?.trim() || defaultPrompt
-    };
+  const handleFormSubmit = async (formData: Pick<FormData, 'systemSettings'>) => {
+    handleSystemSubmit(formData);
+    goToNextStep();
+  };
 
-    // Generate device info after saving
+  const handleGenerateDeviceInfo = async () => {
+    if (!watchedValues.systemSettings?.trim()) {
+      alert('Please enter device data first');
+      return;
+    }
+
     setIsGeneratingDeviceInfo(true);
+    setDeviceInfo('');
+
     try {
-      const requestBody = {
-        systemSettings: formData.systemSettings,
-        name: name || '',
-        context: context || '',
-        prompt: formData.prompt
-      };
-
-      // Store API call details for display
-      setApiCallDetails({
-        url: '/api/generate-device-info',
-        method: 'POST',
-        model: 'gpt-4',
-        version: '1.0.0',
-        timestamp: new Date().toISOString(),
-        requestBody: requestBody
-      });
-
       const response = await fetch('/api/generate-device-info', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          deviceData: watchedValues.systemSettings,
+          name: name || '',
+          context: context || ''
+        }),
       });
 
       if (response.ok) {
         const result = await response.json();
         setDeviceInfo(result.deviceInfo);
-        
-        // Update API call details with response
-        setApiCallDetails((prev: any) => ({
-          ...prev,
-          response: result,
-          status: 'success',
-          responseTime: Date.now() - new Date(prev.timestamp).getTime()
-        }));
       } else {
-        setApiCallDetails((prev: any) => ({
-          ...prev,
-          status: 'error',
-          error: 'Failed to generate device information'
-        }));
+        const errorData = await response.json();
+        setDeviceInfo(`Error: ${errorData.error || 'Failed to generate device information'}`);
       }
     } catch (error) {
       console.error('Error generating device info:', error);
-      setApiCallDetails((prev: any) => ({
-        ...prev,
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }));
+      setDeviceInfo(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGeneratingDeviceInfo(false);
     }
+  };
 
-    handleSystemSubmit(dataToSubmit);
-    goToNextStep();
+  const handleUseSample = () => {
+    setValue('systemSettings', sampleDeviceData, { shouldValidate: true, shouldDirty: true });
+    setShowSample(false);
   };
 
   return (
@@ -124,105 +115,93 @@ export function SystemSettingsForm() {
       isCollapsed={isCollapsed}
       onCollapseChange={handleCollapseChange('system')}
     >
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="p-4">
-        <label htmlFor="systemSettings" className="block text-sm font-medium text-gray-700 mb-2">
-          System Configuration <span className="text-red-500">*</span>
-        </label>
-        <textarea
-          {...register('systemSettings', { required: 'System settings are required' })}
-          id="systemSettings"
-          placeholder="Enter system settings and configuration..."
-          className="w-full h-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
-        />
-        {formErrors.systemSettings && (
-          <p className="mt-1 text-sm text-red-600">{formErrors.systemSettings.message}</p>
-        )}
-        
-        <div className="mt-4">
-          <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-2">
-            Device Information Prompt
-          </label>
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="p-4 space-y-4">
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="systemSettings" className="block text-sm font-medium text-gray-700">
+              Device Data (JSON) <span className="text-red-500">*</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowSample(!showSample)}
+              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+            >
+              {showSample ? 'Hide Sample' : 'Show Sample'}
+            </button>
+          </div>
+          
+          {showSample && (
+            <div className="mb-3 p-3 bg-gray-50 rounded-md border border-gray-200">
+              <p className="text-xs text-gray-600 mb-2">Sample device data format:</p>
+              <pre className="text-xs text-gray-700 overflow-x-auto">{sampleDeviceData}</pre>
+              <button
+                type="button"
+                onClick={handleUseSample}
+                className="mt-2 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+              >
+                Use This Sample
+              </button>
+            </div>
+          )}
+          
           <textarea
-            {...register('prompt')}
-            id="prompt"
-            placeholder="Enter your custom prompt for device information generation..."
-            className="w-full h-24 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+            {...register('systemSettings', { required: 'Device data is required' })}
+            id="systemSettings"
+            placeholder='Paste your device data JSON here...'
+            className="w-full h-40 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-y font-mono text-sm"
           />
+          {formErrors.systemSettings && (
+            <p className="mt-1 text-sm text-red-600">{formErrors.systemSettings.message}</p>
+          )}
           <p className="mt-1 text-xs text-gray-500">
-            This prompt will be used to generate device information from system settings. If left empty, the default prompt will be used.
+            Paste device information JSON. This will be converted to natural language using the selected persona's context.
           </p>
         </div>
-        
-        <ErrorDisplay errors={errors} className="mt-3" />
-        
-        {/* API Call Details Display */}
-        {apiCallDetails && (
-          <div className="mt-4 p-4 bg-blue-50 rounded-md border border-blue-200">
-            <h4 className="text-sm font-medium text-blue-700 mb-3">API Call Details:</h4>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="font-medium text-gray-600">URL:</span>
-                <span className="text-gray-800 font-mono">{apiCallDetails.url}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium text-gray-600">Method:</span>
-                <span className="text-gray-800 font-mono">{apiCallDetails.method}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium text-gray-600">Model:</span>
-                <span className="text-gray-800 font-mono">{apiCallDetails.model}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium text-gray-600">Version:</span>
-                <span className="text-gray-800 font-mono">{apiCallDetails.version}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium text-gray-600">Status:</span>
-                <span className={`font-mono ${
-                  apiCallDetails.status === 'success' ? 'text-green-600' : 
-                  apiCallDetails.status === 'error' ? 'text-red-600' : 'text-yellow-600'
-                }`}>
-                  {apiCallDetails.status || 'pending'}
-                </span>
-              </div>
-              {apiCallDetails.responseTime && (
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-600">Response Time:</span>
-                  <span className="text-gray-800 font-mono">{apiCallDetails.responseTime}ms</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="font-medium text-gray-600">Timestamp:</span>
-                <span className="text-gray-800 font-mono text-xs">
-                  {new Date(apiCallDetails.timestamp).toLocaleString()}
-                </span>
-              </div>
-              {apiCallDetails.error && (
-                <div className="mt-2 p-2 bg-red-100 rounded border border-red-200">
-                  <span className="font-medium text-red-700">Error:</span>
-                  <span className="text-red-600 ml-2">{apiCallDetails.error}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+
+        {/* Generate Button */}
+        <button
+          type="button"
+          onClick={handleGenerateDeviceInfo}
+          disabled={isGeneratingDeviceInfo || !watchedValues.systemSettings?.trim()}
+          className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
+        >
+          {isGeneratingDeviceInfo ? (
+            <>
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Generating Natural Language...
+            </>
+          ) : (
+            'Generate Device Info'
+          )}
+        </button>
 
         {/* Device Information Display */}
         {deviceInfo && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-md border border-gray-200">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Generated Device Information:</h4>
-            <p className="text-sm text-gray-600">{deviceInfo}</p>
+          <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-md border border-green-200">
+            <h4 className="text-sm font-semibold text-green-900 mb-2 flex items-center gap-2">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Generated Device Information:
+            </h4>
+            <p className="text-sm text-gray-800 leading-relaxed">{deviceInfo}</p>
+            <p className="text-xs text-gray-600 mt-2 italic">
+              This description is tailored for: {name || 'the selected user'}
+            </p>
           </div>
         )}
+        
+        <ErrorDisplay errors={errors} />
         
         <SubmitButton 
           onSubmit={handleSubmit(handleFormSubmit)} 
           variant="subtle" 
           show={showSubmitButton}
-          className="mt-4"
-          isLoading={isGeneratingDeviceInfo}
         >
-          {isGeneratingDeviceInfo ? 'Saving & Generating Info...' : 'Save System Settings'}
+          Continue to Next Step
         </SubmitButton>
       </form>
     </CollapsibleBox>

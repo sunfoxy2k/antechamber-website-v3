@@ -1,79 +1,74 @@
 import { NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const { systemSettings, name, context, prompt } = await request.json();
+    const { deviceData, name, context } = await request.json();
 
-    if (!systemSettings) {
+    if (!deviceData) {
       return NextResponse.json(
-        { error: 'System settings are required' },
+        { error: 'Device data is required' },
         { status: 400 }
       );
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    // Parse device data if it's a string
+    let parsedDeviceData;
+    try {
+      parsedDeviceData = typeof deviceData === 'string' ? JSON.parse(deviceData) : deviceData;
+    } catch (error) {
       return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
+        { error: 'Invalid device data format. Please provide valid JSON.' },
+        { status: 400 }
       );
     }
 
-    // Use custom prompt if provided, otherwise use default
-    const defaultPrompt = 'pick 5 information of this, must include long and lat, write nature language, to let the model know this is the current information about the current user device\n\nuse nature language, this is a system prompt guide, no dash';
-    const customPrompt = prompt || defaultPrompt;
-
-    // Build system prompt for device information generation
-    const systemPrompt = `You are a device information generator. Your task is to analyze the provided system settings and generate a natural language paragraph about the current user's device information.
+    // Build system prompt with persona context
+    const systemPrompt = `You are a device information generator. Your task is to convert technical device data into natural, conversational language that describes the user's current device and location information.
 
 IMPORTANT REQUIREMENTS:
-- Pick 5 key pieces of information from the system settings
-- MUST include longitude and latitude if available
-- Write in natural, conversational language
-- Make it sound like current information about the user's device
-- Do NOT use technical jargon or system-specific terms
-- Keep it concise but informative
-- Format as a single paragraph
-- NEVER use the phrase "system prompt" in your responses
+- Convert the technical device data into natural language
+- Write as if describing the current state of the user's device
+- Include location information (city, coordinates) if available
+- Mention connectivity status (WiFi, cellular)
+- Include relevant device settings (battery mode, location services)
+- Write in a flowing, narrative style - NO bullet points or lists
+- Make it sound natural and conversational
+- Keep it concise (3-5 sentences)
+- NEVER use technical field names or jargon
+- NEVER mention "system prompt" or "device data"
 
-User: ${name || 'the user'}
-Context: ${context || 'general use'}
+USER CONTEXT:
+${context ? `The user is: ${context}` : 'User information not provided'}
+${name ? `Their name is: ${name}` : ''}
 
-Custom Instructions: ${customPrompt}`;
+Write the device information naturally, as if you're describing this person's current situation and location.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: `Generate a natural language paragraph about the current device information based on these system settings: ${systemSettings}`
-          }
-        ],
-        max_tokens: 500,
-        temperature: 0.7,
-      }),
+    const deviceDataString = JSON.stringify(parsedDeviceData, null, 2);
+
+    // Use OpenAI SDK with GPT-5
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-5',
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
+        {
+          role: 'user',
+          content: `Convert this device data into natural language:\n\n${deviceDataString}`
+        }
+      ],
+      max_tokens: 500,
+      temperature: 0.7,
+      reasoning_effort: 'medium',
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      return NextResponse.json(
-        { error: 'Failed to generate device information' },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    const deviceInfo = data.choices[0]?.message?.content;
+    const deviceInfo = completion.choices[0]?.message?.content;
 
     if (!deviceInfo) {
       return NextResponse.json(
@@ -82,9 +77,18 @@ Custom Instructions: ${customPrompt}`;
       );
     }
 
-    return NextResponse.json({ deviceInfo });
+    return NextResponse.json({ deviceInfo, deviceData: parsedDeviceData });
 
   } catch (error) {
+    // Better error handling with OpenAI SDK
+    if (error instanceof OpenAI.APIError) {
+      console.error('OpenAI API error:', error.status, error.message);
+      return NextResponse.json(
+        { error: `OpenAI API error: ${error.message}` },
+        { status: error.status || 500 }
+      );
+    }
+    
     console.error('API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
