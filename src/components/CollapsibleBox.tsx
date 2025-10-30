@@ -10,9 +10,18 @@ interface CollapsibleBoxProps {
   className?: string;
   isCollapsed?: boolean;
   onCollapseChange?: (collapsed: boolean) => void;
+  summary?: ReactNode; // Summary to show when collapsed
 }
 
-export function CollapsibleBox({ title, isFilled = false, children, className = '', isCollapsed: externalCollapsed, onCollapseChange }: CollapsibleBoxProps) {
+export function CollapsibleBox({ 
+  title, 
+  isFilled = false, 
+  children, 
+  className = '', 
+  isCollapsed: externalCollapsed, 
+  onCollapseChange,
+  summary 
+}: CollapsibleBoxProps) {
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   
   // Use external collapsed state if provided, otherwise use internal state
@@ -30,7 +39,7 @@ export function CollapsibleBox({ title, isFilled = false, children, className = 
   return (
     <div className={`bg-white rounded-lg shadow-lg border border-gray-200 ${className}`}>
       <div 
-        className="p-4 border-b border-gray-200 cursor-pointer flex items-center justify-between"
+        className="p-4 border-b border-gray-200 cursor-pointer flex items-center justify-between hover:bg-gray-50 transition-colors"
         onClick={handleCollapseToggle}
       >
         <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
@@ -43,6 +52,11 @@ export function CollapsibleBox({ title, isFilled = false, children, className = 
           <ChevronUp className="h-5 w-5 text-gray-500" />
         )}
       </div>
+      
+      {/* Show summary when collapsed */}
+      {isCollapsed && summary && summary}
+      
+      {/* Show full content when expanded */}
       {!isCollapsed && children}
     </div>
   );

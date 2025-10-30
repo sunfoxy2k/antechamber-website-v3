@@ -6,20 +6,26 @@ import { CollapsibleBox } from '@/components/CollapsibleBox';
 import { SubmitButton } from '@/components/SubmitButton';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { FormData } from '@/types/form';
+import { useParaphraseFormState } from '@/contexts/ParaphraseFormContext';
 
-interface SystemSettingsFormProps {
-  data: Pick<FormData, 'systemSettings'>;
-  onSubmit: (data: Pick<FormData, 'systemSettings' | 'prompt'>) => void;
-  isFilled: boolean;
-  errors: string[];
-  onNext?: () => void;
-  isCollapsed?: boolean;
-  onCollapseChange?: (collapsed: boolean) => void;
-  name?: string;
-  context?: string;
-}
+export function SystemSettingsForm() {
+  const {
+    formData,
+    validationErrors,
+    formCollapsedStates,
+    handleSystemSubmit,
+    handleCollapseChange,
+    goToNextStep,
+    getFilledStatus
+  } = useParaphraseFormState();
 
-export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, isCollapsed, onCollapseChange, name, context }: SystemSettingsFormProps) {
+  const data = { systemSettings: formData.systemSettings };
+  const errors = validationErrors.system;
+  const isCollapsed = formCollapsedStates.system;
+  const isFilled = getFilledStatus().system;
+  const name = formData.name;
+  const context = formData.context;
+
   const defaultPrompt = 'pick 5 information of this, must include long and lat, write nature language, to let the model know this is the current information about the current user device\n\nuse nature language, this is a system prompt guide, no dash';
   
   const { register, handleSubmit, watch, formState: { errors: formErrors } } = useForm({
@@ -83,14 +89,14 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
         setDeviceInfo(result.deviceInfo);
         
         // Update API call details with response
-        setApiCallDetails(prev => ({
+        setApiCallDetails((prev: any) => ({
           ...prev,
           response: result,
           status: 'success',
           responseTime: Date.now() - new Date(prev.timestamp).getTime()
         }));
       } else {
-        setApiCallDetails(prev => ({
+        setApiCallDetails((prev: any) => ({
           ...prev,
           status: 'error',
           error: 'Failed to generate device information'
@@ -98,7 +104,7 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
       }
     } catch (error) {
       console.error('Error generating device info:', error);
-      setApiCallDetails(prev => ({
+      setApiCallDetails((prev: any) => ({
         ...prev,
         status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -107,10 +113,8 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
       setIsGeneratingDeviceInfo(false);
     }
 
-    onSubmit(dataToSubmit);
-    if (onNext) {
-      onNext();
-    }
+    handleSystemSubmit(dataToSubmit);
+    goToNextStep();
   };
 
   return (
@@ -118,7 +122,7 @@ export function SystemSettingsForm({ data, onSubmit, isFilled, errors, onNext, i
       title="System Settings" 
       isFilled={isFilled}
       isCollapsed={isCollapsed}
-      onCollapseChange={onCollapseChange}
+      onCollapseChange={handleCollapseChange('system')}
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="p-4">
         <label htmlFor="systemSettings" className="block text-sm font-medium text-gray-700 mb-2">

@@ -6,23 +6,30 @@ import { CollapsibleBox } from '@/components/CollapsibleBox';
 import { SubmitButton } from '@/components/SubmitButton';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { FormData } from '@/types/form';
+import { useParaphraseFormState } from '@/contexts/ParaphraseFormContext';
+import { PersonaSelector } from '@/components/PersonaSelector';
 
-interface ContextFormProps {
-  data: Pick<FormData, 'name' | 'context'>;
-  onSubmit: (data: Pick<FormData, 'name' | 'context'>) => void;
-  isFilled: boolean;
-  errors: string[];
-  onNext?: () => void;
-  isCollapsed?: boolean;
-  onCollapseChange?: (collapsed: boolean) => void;
-}
+export function ContextForm() {
+  const {
+    formData,
+    validationErrors,
+    formCollapsedStates,
+    handleContextSubmit,
+    handleCollapseChange,
+    goToNextStep,
+    getFilledStatus
+  } = useParaphraseFormState();
 
-export function ContextForm({ data, onSubmit, isFilled, errors, onNext, isCollapsed, onCollapseChange }: ContextFormProps) {
-  const { register, handleSubmit, watch, formState: { errors: formErrors } } = useForm({
+  const data = { name: formData.name, context: formData.context };
+  const errors = validationErrors.context;
+  const isCollapsed = formCollapsedStates.context;
+  const isFilled = getFilledStatus().context;
+
+  const { handleSubmit, setValue, watch, formState: { errors: formErrors } } = useForm({
     defaultValues: data
   });
   
-  const [showSubmitButton, setShowSubmitButton] = useState(true); // Show by default for empty form
+  const [showSubmitButton, setShowSubmitButton] = useState(true);
   const watchedValues = watch();
 
   // Show submit button when form is empty or has changes
@@ -33,50 +40,53 @@ export function ContextForm({ data, onSubmit, isFilled, errors, onNext, isCollap
   }, [watchedValues, data]);
 
   const handleFormSubmit = (formData: Pick<FormData, 'name' | 'context'>) => {
-    onSubmit(formData);
-    if (onNext) {
-      onNext();
-    }
+    handleContextSubmit(formData);
+    goToNextStep();
+  };
+
+  const handlePersonaSelect = (name: string, context: string) => {
+    setValue('name', name, { shouldValidate: true, shouldDirty: true });
+    setValue('context', context, { shouldValidate: true, shouldDirty: true });
+  };
+
+  // Render selected persona summary when collapsed
+  const renderPersonaSummary = () => {
+    if (!watchedValues.name || !watchedValues.context) return null;
+
+    return (
+      <div className="p-4 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-indigo-200">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <h4 className="font-semibold text-lg text-indigo-900">{watchedValues.name}</h4>
+              <span className="px-2 py-1 bg-indigo-200 text-indigo-800 text-xs font-medium rounded-full">
+                Selected
+              </span>
+            </div>
+            <p className="text-sm text-indigo-800 leading-relaxed">{watchedValues.context}</p>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
     <CollapsibleBox 
-      title="Context" 
+      title="Target Audience" 
       isFilled={isFilled}
       isCollapsed={isCollapsed}
-      onCollapseChange={onCollapseChange}
+      onCollapseChange={handleCollapseChange('context')}
+      summary={renderPersonaSummary()}
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="p-4 space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-            Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            {...register('name', { required: 'Name is required' })}
-            type="text"
-            id="name"
-            placeholder="Enter name..."
-            className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          />
-          {formErrors.name && (
-            <p className="mt-1 text-sm text-red-600">{formErrors.name.message}</p>
-          )}
-        </div>
-        
-        <div>
-          <label htmlFor="context" className="block text-sm font-medium text-gray-700 mb-2">
-            Context <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            {...register('context', { required: 'Context is required' })}
-            id="context"
-            placeholder="Enter context..."
-            className="w-full h-24 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
-          />
-          {formErrors.context && (
-            <p className="mt-1 text-sm text-red-600">{formErrors.context.message}</p>
-          )}
-        </div>
+        <PersonaSelector
+          selectedPersona={
+            watchedValues.name && watchedValues.context
+              ? { name: watchedValues.name, context: watchedValues.context }
+              : undefined
+          }
+          onPersonaSelect={handlePersonaSelect}
+        />
         
         <ErrorDisplay errors={errors} />
         
@@ -85,7 +95,7 @@ export function ContextForm({ data, onSubmit, isFilled, errors, onNext, isCollap
           variant="subtle" 
           show={showSubmitButton}
         >
-          Save Context
+          Continue with Selected Persona
         </SubmitButton>
       </form>
     </CollapsibleBox>

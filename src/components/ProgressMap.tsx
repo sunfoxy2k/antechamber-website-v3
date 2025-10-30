@@ -1,12 +1,11 @@
 'use client';
 
-import { FilledStatus } from '@/types/form';
+import { useParaphraseFormState } from '@/contexts/ParaphraseFormContext';
 
-interface ProgressMapProps {
-  filledStatus: FilledStatus;
-}
+export function ProgressMap() {
+  const { getFilledStatus } = useParaphraseFormState();
+  const filledStatus = getFilledStatus();
 
-export function ProgressMap({ filledStatus }: ProgressMapProps) {
   const sections = [
     { key: 'context', label: 'Context', filled: filledStatus.context },
     { key: 'system', label: 'System Settings', filled: filledStatus.system },

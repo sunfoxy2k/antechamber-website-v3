@@ -1,0 +1,113 @@
+{
+  "maleFirstNames": [
+    "Minh", "Tuan", "Duc", "Thanh", "Khanh", "Quan", "Long", "Hai",
+    "Binh", "Khoa", "Van", "Nam", "Hung", "Cuong", "Bao", "Dung",
+    "Quang", "Trung", "Son", "Tam", "Phat", "Nhan", "Duy", "Vinh",
+    "Loc", "Phuc", "Dat", "An", "Sang", "Thinh", "Thien", "Tu",
+    "Hoai", "Duong", "Tin", "Kiet", "Tai", "Lam", "Toan", "Khoi",
+    "Thuan", "Hieu", "Thai", "Trieu", "Nhat", "Hoang", "Phuoc", "Tung",
+    "Thang", "Dao", "Phong"
+  ],
+  "femaleFirstNames": [
+    "Linh", "Hoa", "Anh", "Huong", "Phuong", "Thao", "Mai", "Lan",
+    "Thu", "Hong", "Trang", "Hien", "Ngoc", "Thuy", "Chi", "My",
+    "Ly", "Giang", "Kim", "Hanh", "Tuyet", "Xuan", "Thi", "Yen",
+    "Truc", "Hue", "Nga", "Chau", "Ha", "Oanh", "Tien", "Loan",
+    "Dan", "Trinh", "Nhu", "Uyen", "Vi", "Quynh", "Nhi", "Dieu",
+    "Cam", "Diep", "Ngan", "Suong"
+  ],
+  "familyNames": [
+    "Nguyen", "Tran", "Pham", "Le", "Hoang", "Vo", "Dang", "Bui",
+    "Ngo", "Doan", "Phan", "Truong", "Dinh", "Luong", "Vu"
+  ],
+  "personalities": {
+    "introverted": {
+      "traits": ["thoughtful", "quiet", "observant", "reflective", "detail-oriented"],
+      "preferredActivities": ["reading", "writing", "coding", "research"]
+    },
+    "extroverted": {
+      "traits": ["outgoing", "energetic", "social", "enthusiastic", "expressive"],
+      "preferredActivities": ["networking", "public speaking", "team collaboration"]
+    },
+    "analytical": {
+      "traits": ["logical", "precise", "systematic", "problem-solver", "data-driven"],
+      "preferredActivities": ["analysis", "planning", "optimization"]
+    },
+    "creative": {
+      "traits": ["imaginative", "artistic", "innovative", "expressive", "open-minded"],
+      "preferredActivities": ["design", "art", "writing", "brainstorming"]
+    },
+    "practical": {
+      "traits": ["realistic", "hands-on", "efficient", "pragmatic", "action-oriented"],
+      "preferredActivities": ["building", "fixing", "organizing", "executing"]
+    },
+    "empathetic": {
+      "traits": ["caring", "understanding", "supportive", "patient", "collaborative"],
+      "preferredActivities": ["helping others", "mentoring", "counseling", "teaching"]
+    }
+  },
+  "lifeStages": [
+    {
+      "stage": "college_student",
+      "ageRange": [18, 24],
+      "likelyPersonalities": ["analytical", "creative", "extroverted"],
+      "context": "Currently pursuing higher education",
+      "characteristics": ["learning", "exploring", "social", "energetic"]
+    },
+    {
+      "stage": "young_professional",
+      "ageRange": [25, 35],
+      "likelyPersonalities": ["analytical", "practical", "extroverted"],
+      "context": "Building career and establishing independence",
+      "characteristics": ["ambitious", "busy", "career-focused", "adaptive"]
+    },
+    {
+      "stage": "established_professional",
+      "ageRange": [36, 50],
+      "likelyPersonalities": ["practical", "analytical", "empathetic"],
+      "context": "Experienced professional, possibly with family",
+      "characteristics": ["balanced", "responsible", "mentoring", "stable"]
+    },
+    {
+      "stage": "senior_professional",
+      "ageRange": [51, 65],
+      "likelyPersonalities": ["empathetic", "practical", "introverted"],
+      "context": "Senior in career, planning for retirement",
+      "characteristics": ["experienced", "wise", "mentoring", "reflective"]
+    },
+    {
+      "stage": "retired",
+      "ageRange": [66, 85],
+      "likelyPersonalities": ["introverted", "empathetic", "creative"],
+      "context": "Enjoying retirement, pursuing hobbies",
+      "characteristics": ["relaxed", "reflective", "hobby-focused", "family-oriented"]
+    }
+  ],
+  "familyStatus": {
+    "single": {
+      "likelyStages": ["college_student", "young_professional"],
+      "probability": 0.4
+    },
+    "married_no_children": {
+      "likelyStages": ["young_professional", "established_professional"],
+      "probability": 0.2
+    },
+    "married_with_children": {
+      "likelyStages": ["established_professional", "senior_professional"],
+      "probability": 0.3
+    },
+    "empty_nester": {
+      "likelyStages": ["senior_professional", "retired"],
+      "probability": 0.1
+    }
+  },
+  "metadata": {
+    "totalMaleNames": 51,
+    "totalFemaleNames": 44,
+    "totalFamilyNames": 15,
+    "totalPersonalities": 6,
+    "totalLifeStages": 5,
+    "description": "Vietnamese persona generation with aligned attributes"
+  }
+}
+

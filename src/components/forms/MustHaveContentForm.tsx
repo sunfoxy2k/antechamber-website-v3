@@ -5,17 +5,22 @@ import { useState, useEffect } from 'react';
 import { CollapsibleBox } from '@/components/CollapsibleBox';
 import { SubmitButton } from '@/components/SubmitButton';
 import { FormData } from '@/types/form';
+import { useParaphraseFormState } from '@/contexts/ParaphraseFormContext';
 
-interface MustHaveContentFormProps {
-  data: Pick<FormData, 'mustHaveContent'>;
-  onSubmit: (data: Pick<FormData, 'mustHaveContent'>) => void;
-  isFilled: boolean;
-  onNext?: () => void;
-  isCollapsed?: boolean;
-  onCollapseChange?: (collapsed: boolean) => void;
-}
+export function MustHaveContentForm() {
+  const {
+    formData,
+    formCollapsedStates,
+    handleMustHaveSubmit,
+    handleCollapseChange,
+    goToNextStep,
+    getFilledStatus
+  } = useParaphraseFormState();
 
-export function MustHaveContentForm({ data, onSubmit, isFilled, onNext, isCollapsed, onCollapseChange }: MustHaveContentFormProps) {
+  const data = { mustHaveContent: formData.mustHaveContent };
+  const isCollapsed = formCollapsedStates.mustHave;
+  const isFilled = getFilledStatus().mustHave;
+
   const { register, handleSubmit, watch } = useForm({
     defaultValues: data
   });
@@ -31,10 +36,8 @@ export function MustHaveContentForm({ data, onSubmit, isFilled, onNext, isCollap
   }, [watchedValues, data]);
 
   const handleFormSubmit = (formData: Pick<FormData, 'mustHaveContent'>) => {
-    onSubmit(formData);
-    if (onNext) {
-      onNext();
-    }
+    handleMustHaveSubmit(formData);
+    goToNextStep();
   };
 
   return (
@@ -42,7 +45,7 @@ export function MustHaveContentForm({ data, onSubmit, isFilled, onNext, isCollap
       title="Must Have Content" 
       isFilled={isFilled}
       isCollapsed={isCollapsed}
-      onCollapseChange={onCollapseChange}
+      onCollapseChange={handleCollapseChange('mustHave')}
     >
       <div className="p-4">
         <form onSubmit={handleSubmit(handleFormSubmit)}>

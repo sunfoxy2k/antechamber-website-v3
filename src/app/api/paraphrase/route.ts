@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,14 +13,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Content is required' },
         { status: 400 }
-      );
-    }
-
-
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
       );
     }
 
@@ -48,40 +45,25 @@ IMPORTANT REQUIREMENTS:
       systemPrompt += `\n\nCUSTOM INSTRUCTIONS: ${prompt}`;
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: content
-          }
-        ],
-        max_tokens: 2000,
-        temperature: 0.7,
-      }),
+    // Use OpenAI SDK with GPT-5 (latest model released August 2025)
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-5', // Latest GPT-5 model with advanced capabilities
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
+        {
+          role: 'user',
+          content: content
+        }
+      ],
+      max_tokens: 2000,
+      temperature: 0.7,
+      reasoning_effort: 'medium', // GPT-5 feature: control thinking time
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      return NextResponse.json(
-        { error: 'Failed to paraphrase content' },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    const paraphrasedContent = data.choices[0]?.message?.content;
+    const paraphrasedContent = completion.choices[0]?.message?.content;
 
     if (!paraphrasedContent) {
       return NextResponse.json(
@@ -99,6 +81,15 @@ IMPORTANT REQUIREMENTS:
     return NextResponse.json({ paragraphs });
 
   } catch (error) {
+    // Better error handling with OpenAI SDK
+    if (error instanceof OpenAI.APIError) {
+      console.error('OpenAI API error:', error.status, error.message);
+      return NextResponse.json(
+        { error: `OpenAI API error: ${error.message}` },
+        { status: error.status || 500 }
+      );
+    }
+    
     console.error('API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },

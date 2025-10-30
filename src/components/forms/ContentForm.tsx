@@ -7,34 +7,28 @@ import { SubmitButton } from '@/components/SubmitButton';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { FormData } from '@/types/form';
+import { useParaphraseFormState } from '@/contexts/ParaphraseFormContext';
 
-interface ContentFormProps {
-  data: Pick<FormData, 'content' | 'prompt'>;
-  onSubmit: (data: Pick<FormData, 'content'>) => void;
-  onMainSubmit: () => void;
-  isFilled: boolean;
-  errors: string[];
-  isLoading: boolean;
-  mainError?: string;
-  originalParagraphs: string[];
-  paraphrasedParagraphs: string[];
-  isCollapsed?: boolean;
-  onCollapseChange?: (collapsed: boolean) => void;
-}
+export function ContentForm() {
+  const {
+    formData,
+    validationErrors,
+    formCollapsedStates,
+    isLoading,
+    mainError,
+    originalParagraphs,
+    paraphrasedParagraphs,
+    handleContentSubmit,
+    handleMainSubmit,
+    handleCollapseChange,
+    getFilledStatus
+  } = useParaphraseFormState();
 
-export function ContentForm({ 
-  data, 
-  onSubmit, 
-  onMainSubmit, 
-  isFilled, 
-  errors, 
-  isLoading,
-  mainError,
-  originalParagraphs,
-  paraphrasedParagraphs,
-  isCollapsed,
-  onCollapseChange
-}: ContentFormProps) {
+  const data = { content: formData.content, prompt: formData.prompt };
+  const errors = validationErrors.content;
+  const isCollapsed = formCollapsedStates.content;
+  const isFilled = getFilledStatus().content;
+
   const { register, handleSubmit, watch, setValue } = useForm({
     defaultValues: data
   });
@@ -52,7 +46,7 @@ export function ContentForm({
   }, [watchedValues, data]);
 
   const handleFormSubmit = (formData: Pick<FormData, 'content'>) => {
-    onSubmit(formData);
+    handleContentSubmit(formData);
   };
 
   // Auto-resize textarea
@@ -67,7 +61,7 @@ export function ContentForm({
       title="Paraphrase Content" 
       isFilled={isFilled}
       isCollapsed={isCollapsed}
-      onCollapseChange={onCollapseChange}
+      onCollapseChange={handleCollapseChange('content')}
     >
       <div className="p-4">
         <div className="space-y-4">
@@ -130,7 +124,7 @@ export function ContentForm({
         {/* Main Submit Button */}
         <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end">
           <SubmitButton 
-            onSubmit={onMainSubmit}
+            onSubmit={handleMainSubmit}
             variant="sm"
             className="px-6"
             isLoading={isLoading}
